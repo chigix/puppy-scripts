@@ -1,0 +1,78 @@
+#! /bin/sh
+
+usage () {
+    echo "usage: jsontool -f '{{json}}' --pretty"
+}
+
+format () {
+    #echo "'$(escape_quote $1)'"
+    #echo "$2"
+    cmdline=$(cat <<EOF
+docker run --rm chigix/puppy python -c 'import jinja2, json; print jinja2.Template("$(escape_quote $1)").render(json=json.loads("$(escape_quote $2)"))'
+EOF
+)
+    bash -c "$cmdline" 2>/dev/null
+    OUT=$?
+    if [ $OUT != 0 ]; then
+        echo "Invalid JSON String: $2"
+        exit 1
+    fi
+}
+
+escape_quote () {
+    local escaped="\0047" 
+    ret=$(echo -e "${@//\'/$escaped}")
+    escaped="\\\\\\0042"
+    ret=$(echo -e "${@//\"/$escaped}")
+    echo $ret
+}
+
+pretty () {
+    echo "$@" | docker run --rm -i chigix/puppy python -m json.tool
+    OUT=$?
+    if [ $OUT != 0 ]; then
+        echo "$@"
+    fi
+}
+
+FORMAT_OPT=false
+PRETTY_OPT=false
+# Process the option list
+while [ "$1" != "" ]; do
+    OPTION=$1
+    if [ $(echo $OPTION | cut -c1,2) = "--" ]; then
+        OPTION=$(echo $OPTION | cut -d"=" -f1)
+    fi
+    case $OPTION in
+        -f )
+            shift
+            FORMAT_OPT=$1
+            ;;
+        --format )
+            FORMAT_OPT=$(echo $1 | cut -d"=" -f2)
+            ;;
+        -p)
+            PRETTY_OPT=true
+            ;;
+        --pretty )
+            if [ $1 = "--pretty=true" ]; then PRETTY_OPT=true; fi
+            ;;
+        * )
+            usage
+            exit 1
+    esac
+    shift
+done
+
+read STDIN
+
+if [ "$FORMAT_OPT" != "false" ]; then
+    STDIN=$(format "$FORMAT_OPT" "$STDIN")
+fi
+
+if [ "$PRETTY_OPT" = "true" ]; then
+    STDIN=$(pretty $STDIN)
+fi
+cat <<EOF
+$STDIN
+EOF
