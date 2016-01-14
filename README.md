@@ -1,0 +1,1 @@
+Please reference this directory via symbol link, `/usr/local/bin`.
