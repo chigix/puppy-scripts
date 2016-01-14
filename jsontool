@@ -11,7 +11,7 @@ format () {
 docker run --rm chigix/puppy python -c 'import jinja2, json; print jinja2.Template("$(escape_quote $1)").render(json=json.loads("$(escape_quote $2)"))'
 EOF
 )
-    bash -c "$cmdline" 2>/dev/null
+    bash -c "$cmdline" 
     OUT=$?
     if [ $OUT != 0 ]; then
         echo "Invalid JSON String: $2"
@@ -55,7 +55,7 @@ while [ "$1" != "" ]; do
             PRETTY_OPT=true
             ;;
         --pretty )
-            if [ $1 = "--pretty=true" ]; then PRETTY_OPT=true; fi
+            PRETTY_OPT=true
             ;;
         * )
             usage
