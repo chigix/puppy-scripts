@@ -1,0 +1,6 @@
+#! /bin/sh
+
+for container_id in $(docker ps -aq -f status=exited); do
+docker rm $container_id;
+done;
+# docker rm $(docker ps -aq -f status=exited)
