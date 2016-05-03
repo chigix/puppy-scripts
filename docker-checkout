@@ -1,0 +1,3 @@
+#! /bin/sh
+
+eval $(docker-machine env $1 --shell=shell)
